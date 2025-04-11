@@ -20,7 +20,7 @@ import qrcode
 from io import BytesIO
 import uuid
 from dv import restart,start_markup,start_markup4
-DATABASE_FILE = "naglo1.db"
+DATABASE_FILE = "database6.db"
 ADMIN_IDS = [5510185795,1097080977]
 SHOP_ID = '1060209'
 API_KEY = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
@@ -32,7 +32,7 @@ SECOND_BOT_USERNAME = "Nagloclub_bot"
 from data import (create_database, add_event, get_event, get_all_events,register_participant,verify_ticket,save_ticket,check_ticket_status,mark_ticket_as_scanned,cleanup_past_events)
 
 # Токен вашего бота
-BOT_TOKEN = "7824701512:AAHucsp9-Ax6DdlPp6QeOIbUARnSucIvFd4"
+BOT_TOKEN = "7741421068:AAEES9SMSegfN1IidcvobaSGpvz7AZ8oLM4"
 
 # Инициализация бота и диспетчера
 storage = MemoryStorage()
@@ -1033,7 +1033,7 @@ async def cancel_event_deletion(callback_query: types.CallbackQuery):
 async def main():
     await create_database()
     print(1)
-    await bot.polling(none_stop=True)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
