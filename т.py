@@ -1,13 +1,18 @@
 import asyncio
+
+import logger
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.context import FSMContext
+from telebot.async_telebot import AsyncTeleBot
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BufferedInputFile
 import requests
 from yookassa import Configuration, Payment
+import logging
 from datetime import datetime
 import json
 import sqlite3
+from telebot import types
 from aiogram import Bot, Dispatcher, types, F, Router  # Добавляем импорт F
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -15,19 +20,19 @@ import qrcode
 from io import BytesIO
 import uuid
 from dv import restart,start_markup,start_markup4
-DATABASE_FILE = "database6.db"
+DATABASE_FILE = "naglo1.db"
 ADMIN_IDS = [5510185795,1097080977]
 SHOP_ID = '1060209'
 API_KEY = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
 Configuration.account_id = '1060209'    # например, "1020973"
 Configuration.secret_key = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
-SECOND_BOT_USERNAME = "Stud_VPN_bot"
+SECOND_BOT_USERNAME = "Nagloclub_bot"
 
 # Импортируем функции работы с БД из предыдущего кода
 from data import (create_database, add_event, get_event, get_all_events,register_participant,verify_ticket,save_ticket,check_ticket_status,mark_ticket_as_scanned,cleanup_past_events)
 
 # Токен вашего бота
-BOT_TOKEN = "7741421068:AAEES9SMSegfN1IidcvobaSGpvz7AZ8oLM4"
+BOT_TOKEN = "7824701512:AAHucsp9-Ax6DdlPp6QeOIbUARnSucIvFd4"
 
 # Инициализация бота и диспетчера
 storage = MemoryStorage()
@@ -157,20 +162,39 @@ async def get_main_menu(user_id: int) -> types.ReplyKeyboardMarkup:
             [types.KeyboardButton(text="➕ Создать мероприятие")],
             [types.KeyboardButton(text="🎫 Мои регистрации")],
             [types.KeyboardButton(text="✅ Отметить билет")],
-           # [types.KeyboardButton(text="Дайв")],
-            [types.KeyboardButton(text="🗑️ Удалить мероприятие")],  # Добавляем новую кнопку
+            [types.KeyboardButton(text="🗑️ Удалить мероприятие")],
             [types.KeyboardButton(text="⚙️ Настройки")],
+            [types.KeyboardButton(text="🌊 Дайвинчик")],  # Новая кнопка
         ], resize_keyboard=True)
     else:
         # Меню для пользователей
         keyboard = types.ReplyKeyboardMarkup(keyboard=[
             [types.KeyboardButton(text="📅 Показать мероприятия")],
             [types.KeyboardButton(text="🎫 Мои регистрации")],
-           # [types.KeyboardButton(text="Дайв")],
             [types.KeyboardButton(text="⚙️ Настройки")],
+            [types.KeyboardButton(text="🌊 Дайвинчик")],  # Новая кнопка
         ], resize_keyboard=True)
 
     return keyboard
+
+
+@dp.message(F.text == "🌊 Дайвинчик")
+async def redirect_to_second_bot(message: Message):
+    # Замените "SECOND_BOT_USERNAME" на реальный username второго бота
+    second_bot_username = "Nagloclub_bot"  # Например: "Stud_VPN_bot"
+    second_bot_link = f"https://t.me/{second_bot_username}?start"
+
+    markup = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(
+            text="Перейти в бота для общения 🌊",
+            url=second_bot_link
+        )]
+    ])
+
+    await message.answer(
+        "Нажмите на кнопку ниже, чтобы перейти в бота для знакомств:",
+        reply_markup=markup
+    )
 
 
 
@@ -359,6 +383,8 @@ async def process_vip_price(message: Message, state: FSMContext):
 
     except ValueError:
         await message.answer("Пожалуйста, введите числовое значение:")
+
+
 
 
 # Функция для генерации QR-кода
@@ -1007,7 +1033,7 @@ async def cancel_event_deletion(callback_query: types.CallbackQuery):
 async def main():
     await create_database()
     print(1)
-    await dp.start_polling(bot)
+    await bot.polling(none_stop=True)
 
 
 if __name__ == '__main__':
