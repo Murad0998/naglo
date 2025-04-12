@@ -76,7 +76,6 @@ async def cmd_start(message: Message, state: FSMContext):
     conn.close()
 
     if not user_data:
-        # Если данных нет, запускаем процесс ввода данных
         await state.set_state(UserSetup.waiting_for_first_name)
         await message.answer(
             "Привет! Для начала работы необходимо заполнить данные о себе, чтоб генерировать билет и пройти по нему на вечеринку.\n"

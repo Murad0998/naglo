@@ -3,7 +3,7 @@ import datetime
 import asyncio
 import os
 import datetime
-from datetime import datetime, timedelta
+from datetime import datetime
 
 DATABASE_FILE = "naglobase.db"
 
