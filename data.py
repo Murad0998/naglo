@@ -5,7 +5,7 @@ import os
 import datetime
 from datetime import datetime, timedelta
 
-DATABASE_FILE = "database6.db"
+DATABASE_FILE = "naglobase.db"
 
 
 async def create_database():

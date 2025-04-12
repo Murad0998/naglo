@@ -14,19 +14,23 @@ import json
 import sqlite3
 from telebot import types
 from aiogram import Bot, Dispatcher, types, F, Router  # Добавляем импорт F
-from aiogram.filters import Command
+from aiogram.filters import Command,StateFilter
 from aiogram.types import Message
 import qrcode
 from io import BytesIO
 import uuid
 from dv import restart,start_markup,start_markup4
-DATABASE_FILE = "database6.db"
+DATABASE_FILE = "naglobase.db"
 ADMIN_IDS = [5510185795,1097080977]
 SHOP_ID = '1060209'
 API_KEY = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
 Configuration.account_id = '1060209'    # например, "1020973"
 Configuration.secret_key = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
 SECOND_BOT_USERNAME = "Nagloclub_bot"
+
+logging.basicConfig(
+     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 
 # Импортируем функции работы с БД из предыдущего кода
 from data import (create_database, add_event, get_event, get_all_events,register_participant,verify_ticket,save_ticket,check_ticket_status,mark_ticket_as_scanned,cleanup_past_events)
@@ -279,93 +283,147 @@ async def show_ticket_options(callback_query: types.CallbackQuery):
 
 @dp.message(F.text == "➕ Создать мероприятие")
 async def create_event_start(message: Message, state: FSMContext):
+    await state.clear()  # Очищаем состояние при старте создания мероприятия
     await state.set_state(EventCreation.waiting_for_title)
-    await message.answer("Введите название мероприятия:")
+    await message.answer(
+        "Введите название мероприятия:\n\n"
+        "Чтобы отменить создание, отправьте команду /cancel в любой момент"
+    )
+
+
+# Обработчик команды отмены для всех состояний
+@dp.message(Command("cancel"), StateFilter("*"))
+async def cancel_event_creation(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    await state.clear()
+    await message.answer("Создание мероприятия отменено.")
+    # Можно добавить возврат к главному меню
+    # await show_main_menu(message)
 
 
 @dp.message(EventCreation.waiting_for_title)
 async def process_title(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     await state.update_data(title=message.text)
     await state.set_state(EventCreation.waiting_for_description)
-    await message.answer("Введите описание мероприятия:")
+    await message.answer("Введите описание мероприятия:\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_description)
 async def process_description(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     await state.update_data(description=message.text)
     await state.set_state(EventCreation.waiting_for_date)
-    await message.answer("Введите дату и время мероприятия (формат: ГГГГ-ММ-ДД ЧЧ:ММ):")
+    await message.answer("Введите дату и время мероприятия (формат: ГГГГ-ММ-ДД ЧЧ:ММ):\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_date)
 async def process_date(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     try:
         datetime.strptime(message.text, '%Y-%m-%d %H:%M')
         await state.update_data(date_time=message.text)
         await state.set_state(EventCreation.waiting_for_location)
-        await message.answer("Введите место проведения:")
+        await message.answer("Введите место проведения:\n\nДля отмены отправьте /cancel")
     except ValueError:
         await message.answer("Неверный формат даты. Попробуйте еще раз (ГГГГ-ММ-ДД ЧЧ:ММ):")
 
 
 @dp.message(EventCreation.waiting_for_location)
 async def process_location(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     await state.update_data(location=message.text)
     await state.set_state(EventCreation.waiting_for_max_participants)
-    await message.answer("Введите максимальное количество участников:")
+    await message.answer("Введите максимальное количество участников:\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_max_participants)
 async def process_max_participants(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     if not message.text.isdigit():
         await message.answer("Пожалуйста, введите число:")
         return
 
     await state.update_data(max_participants=int(message.text))
     await state.set_state(EventCreation.waiting_for_photo)
-    await message.answer("Пожалуйста, отправьте фото мероприятия:")
+    await message.answer("Пожалуйста, отправьте фото мероприятия:\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_photo)
 async def process_photo(message: Message, state: FSMContext):
+    if message.text and message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     if not message.photo:
-        await message.answer("Пожалуйста, отправьте фото мероприятия:")
+        await message.answer("Пожалуйста, отправьте фото мероприятия или /cancel для отмены")
         return
 
     photo_id = message.photo[-1].file_id
     await state.update_data(photo_id=photo_id)
     await state.set_state(EventCreation.waiting_for_standard_price)
-    await message.answer("Введите стоимость стандартного билета (в рублях):")
+    await message.answer("Введите стоимость стандартного билета (в рублях):\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_standard_price)
 async def process_standard_price(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     if not message.text.isdigit():
         await message.answer("Пожалуйста, введите числовое значение:")
         return
 
     await state.update_data(standard_price=int(message.text))
     await state.set_state(EventCreation.waiting_for_fasttrack_price)
-    await message.answer("Введите стоимость Fast-Track билета (в рублях):")
+    await message.answer("Введите стоимость Fast-Track билета (в рублях):\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_fasttrack_price)
 async def process_fasttrack_price(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     if not message.text.isdigit():
         await message.answer("Пожалуйста, введите числовое значение:")
         return
 
     await state.update_data(fasttrack_price=int(message.text))
     await state.set_state(EventCreation.waiting_for_vip_price)
-    await message.answer("Введите стоимость VIP билета (в рублях):")
+    await message.answer("Введите стоимость VIP билета (в рублях):\n\nДля отмены отправьте /cancel")
 
 
 @dp.message(EventCreation.waiting_for_vip_price)
 async def process_vip_price(message: Message, state: FSMContext):
+    if message.text.lower() in ["отмена", "cancel"]:
+        await state.clear()
+        return await message.answer("Создание мероприятия отменено.")
+
     try:
         vip_price = int(message.text)
         data = await state.get_data()
 
+        # Только здесь сохраняем все данные в базу
         event_id = await add_event(
             title=data['title'],
             description=data['description'],
@@ -379,12 +437,10 @@ async def process_vip_price(message: Message, state: FSMContext):
         )
 
         await message.answer("Мероприятие успешно создано!")
-        await state.clear()
+        await state.clear()  # Очищаем состояние после успешного создания
 
     except ValueError:
         await message.answer("Пожалуйста, введите числовое значение:")
-
-
 
 
 # Функция для генерации QR-кода
