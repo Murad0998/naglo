@@ -36,7 +36,7 @@ logging.basicConfig(
 from data import (create_database, add_event, get_event, get_all_events,register_participant,verify_ticket,save_ticket,check_ticket_status,mark_ticket_as_scanned,cleanup_past_events)
 
 # Токен вашего бота
-BOT_TOKEN = "7741421068:AAEES9SMSegfN1IidcvobaSGpvz7AZ8oLM4"
+BOT_TOKEN = "7741421068:AAEEUqx0WOSl414DC_Jb-_V1AUu6h8wsISA"
 
 # Инициализация бота и диспетчера
 storage = MemoryStorage()
@@ -628,6 +628,97 @@ async def show_my_registrations(message: Message):
         )
 
 
+# @dp.callback_query(lambda callback_query: callback_query.data.startswith('show_qr_'))
+# async def show_qr_code(callback_query: types.CallbackQuery):
+#     ticket_id = callback_query.data.split('_')[2]
+#     user_id = callback_query.from_user.id
+#
+#     # Получаем данные билета из базы
+#     conn = sqlite3.connect(DATABASE_FILE)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         SELECT ticket_type, event_id
+#         FROM tickets
+#         WHERE ticket_id = ?
+#     ''', (ticket_id,))
+#     ticket = cursor.fetchone()
+#
+#     # Получаем данные о пользователе
+#     cursor.execute('''
+#         SELECT first_name, last_name, middle_name, relationship_status
+#         FROM users
+#         WHERE user_id = ?
+#     ''', (user_id,))
+#     user_data = cursor.fetchone()
+#     conn.close()
+#
+#     if not ticket or not user_data:
+#         await callback_query.message.edit_text("⚠️ QR-код не найден или данные пользователя отсутствуют.")
+#         return
+#
+#     ticket_type, event_id = ticket
+#     first_name, last_name, middle_name, relationship_status = user_data
+#     print(first_name)
+#     # Формируем данные для нового QR-кода
+#     qr_data = {
+#         "ticket_id": ticket_id,
+#         "ticket_type": ticket_type,
+#         "event_id": event_id,
+#         "first_name": first_name,
+#         "last_name": last_name,
+#         "middle_name": middle_name or '',
+#         "status": relationship_status,
+#     }
+#
+#     # Генерируем QR-код
+#     qr_json = json.dumps(qr_data, ensure_ascii=False)
+#     qr_buffer = await generate_qr_code(qr_json)
+#
+#     qr_photo = BufferedInputFile(qr_buffer.getvalue(), filename="ticket_qr.png")
+#     await callback_query.message.answer_photo(
+#         photo=qr_photo,
+#         caption=f"🎟️ Ваш QR-код для билета ({ticket_type})\n"
+#                 f"ID билета: `{ticket_id}`",
+#         parse_mode="Markdown"
+#     )
+
+import io
+from PIL import Image
+import qrcode
+
+
+# Функция для создания билета с QR-кодом
+async def create_ticket_with_qr(qr_data, ticket_type):
+    # Путь к файлу шаблона билета
+    template_path = "path/to/ticket_template.png"  # Замените на реальный путь к шаблону
+
+    # Генерируем QR-код
+    qr_json = json.dumps(qr_data, ensure_ascii=False)
+    qr_img = qrcode.make(qr_json)
+
+    # Открываем шаблон билета
+    template = Image.open(template_path)
+
+    # Изменяем размер QR-кода, чтобы он соответствовал белому пространству
+    qr_size = (450, 450)  # Примерный размер белой области на шаблоне
+    qr_img = qr_img.resize(qr_size)
+
+    # Координаты для размещения QR-кода (нужно настроить под ваш шаблон)
+    # Эти координаты представляют верхний левый угол QR-кода
+    qr_position = (125, 600)  # Подберите значения в зависимости от размера шаблона
+
+    # Вставляем QR-код в шаблон
+    template.paste(qr_img, qr_position)
+
+    # Сохраняем результат в буфер
+    buffer = io.BytesIO()
+    template.save(buffer, format='PNG')
+    buffer.seek(0)
+
+    return buffer
+
+
+# Обновленный обработчик для отображения билета с QR-кодом
 @dp.callback_query(lambda callback_query: callback_query.data.startswith('show_qr_'))
 async def show_qr_code(callback_query: types.CallbackQuery):
     ticket_id = callback_query.data.split('_')[2]
@@ -658,8 +749,8 @@ async def show_qr_code(callback_query: types.CallbackQuery):
 
     ticket_type, event_id = ticket
     first_name, last_name, middle_name, relationship_status = user_data
-    print(first_name)
-    # Формируем данные для нового QR-кода
+
+    # Формируем данные для QR-кода
     qr_data = {
         "ticket_id": ticket_id,
         "ticket_type": ticket_type,
@@ -670,18 +761,20 @@ async def show_qr_code(callback_query: types.CallbackQuery):
         "status": relationship_status,
     }
 
-    # Генерируем QR-код
-    qr_json = json.dumps(qr_data, ensure_ascii=False)
-    qr_buffer = await generate_qr_code(qr_json)
+    # Создаем билет с QR-кодом
+    ticket_buffer = await create_ticket_with_qr(qr_data, ticket_type)
 
-    qr_photo = BufferedInputFile(qr_buffer.getvalue(), filename="ticket_qr.png")
+    # Отправляем изображение билета пользователю
+    ticket_photo = BufferedInputFile(ticket_buffer.getvalue(), filename="naglo_ticket.png")
     await callback_query.message.answer_photo(
-        photo=qr_photo,
-        caption=f"🎟️ Ваш QR-код для билета ({ticket_type})\n"
+        photo=ticket_photo,
+        caption=f"🎟️ Ваш билет ({ticket_type}) на мероприятие NAGLO\n"
                 f"ID билета: `{ticket_id}`",
         parse_mode="Markdown"
     )
 
+    # Подтверждаем обработку callback запроса
+    await callback_query.answer()
 
 
 async def generate_qr_code(qr_json: str) -> BytesIO:
