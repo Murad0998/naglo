@@ -32,7 +32,7 @@ logging.basicConfig(
      format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
-# Импортируем функции работы с БД из предыдущего кода
+# Импортируем функции работы с из предыдущего кода
 from data import (create_database, add_event, get_event, get_all_events,register_participant,verify_ticket,save_ticket,check_ticket_status,mark_ticket_as_scanned,cleanup_past_events)
 
 # Токен вашего бота
