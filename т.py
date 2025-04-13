@@ -6,6 +6,16 @@ from aiogram.fsm.context import FSMContext
 from telebot.async_telebot import AsyncTeleBot
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BufferedInputFile
+from telebot.async_telebot import AsyncTeleBot
+import telebot
+from telebot import types
+import uuid
+import os
+import json
+import aiogram
+import time
+from telebot import types
+from datetime import datetime, timedelta
 import requests
 from yookassa import Configuration, Payment
 import logging
@@ -797,7 +807,7 @@ async def generate_qr_code(qr_json: str) -> BytesIO:
     return buffer
 
 
-@dp.message(F.text == "⚙️ Настройки")
+@bot.callback_query_handler(F.text == "⚙️ Настройки")
 async def user_settings(message: Message):
     user_id = message.from_user.id
 
@@ -1184,5 +1194,10 @@ async def main():
     await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+if __name__ == "__main__":
+    while True:
+        try:
+            asyncio.run(main())
+            break
+        except Exception as e:
+            print(f"Ошибка при запуске: {e}. Перезапуск...")
