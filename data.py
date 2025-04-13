@@ -10,6 +10,7 @@ DATABASE_FILE = "naglobase.db"
 
 async def create_database():
     """Создание базы данных для мероприятий"""
+    print("член")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
