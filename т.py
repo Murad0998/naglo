@@ -807,7 +807,7 @@ async def generate_qr_code(qr_json: str) -> BytesIO:
     return buffer
 
 
-@bot.callback_query_handler(F.text == "⚙️ Настройки")
+@dp.message(F.text == "⚙️ Настройки")
 async def user_settings(message: Message):
     user_id = message.from_user.id
 
