@@ -8,7 +8,7 @@ Configuration.secret_key = 'live_WaOeO9R3nCYzu3PTrW-HH76fEm4LxfiPQfXvppW9X-Q'
 "live_FosI0F8F_OqOHsJM4tiWtCfPBSZAVGma8J90WRRK7Ks"
 SHOP_ID = '1058043'
 API_KEY = 'live_WaOeO9R3nCYzu3PTrW-HH76fEm4LxfiPQfXvppW9X-Q'
-RETURN_URL = 'https://t.me/Stud_VPN_bot'
+RETURN_URL = 'https://t.me/NAGLO_club_bot'
 
 async def create_payment(amount, description, email=None):
     payment_id = str(uuid.uuid4())  # Уникальный ID платежа
