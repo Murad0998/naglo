@@ -1,15 +1,10 @@
 import asyncio
 import signal
-print(1)
 from aiogram.fsm.storage.memory import MemoryStorage
-print(1)
 from aiogram.fsm.context import FSMContext
-print(1)
 from telebot.async_telebot import AsyncTeleBot
 from aiogram.fsm.state import State, StatesGroup
-print(2)
 from aiogram.types import BufferedInputFile
-print(3)
 from telebot.async_telebot import AsyncTeleBot
 import telebot
 from telebot import types
@@ -21,7 +16,6 @@ import time
 from telebot import types
 from datetime import datetime, timedelta
 import requests
-print(4)
 from yookassa import Configuration, Payment
 import logging
 from datetime import datetime
@@ -33,17 +27,13 @@ from aiogram.filters import Command,StateFilter
 from aiogram.types import Message
 import qrcode
 from io import BytesIO
-print(5)
 import uuid
-print(6)
-print(19)
 DATABASE_FILE = "naglobase.db"
-print(7)
 ADMIN_IDS = [5510185795,1097080977]
-SHOP_ID = '1060209'
-API_KEY = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
-Configuration.account_id = '1060209'    # например, "1020973"
-Configuration.secret_key = 'test_bMjswdy-LXNQQCYYlmt4D4B_o2412I7rpkHsYqetirg'
+SHOP_ID = '1058043'
+API_KEY = 'live_WaOeO9R3nCYzu3PTrW-HH76fEm4LxfiPQfXvppW9X-Q'
+Configuration.account_id = '1058043'    # например, "1020973"
+Configuration.secret_key = 'live_WaOeO9R3nCYzu3PTrW-HH76fEm4LxfiPQfXvppW9X-Q'
 SECOND_BOT_USERNAME = "Nagloclub_bot"
 logging.basicConfig(
      format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
