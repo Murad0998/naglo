@@ -35,7 +35,7 @@ async def create_payment(amount, description, email=None):
             },
             "items": [
                 {
-                    "description": "Подписка Впн",
+                    "description": f"Билет на вечеринку {amount}",
                     "quantity": 1,
                     "amount": {
                         "value": str(amount),

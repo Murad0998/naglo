@@ -920,30 +920,53 @@ async def manual_cleanup(message: Message):
 
 async def create_payment(event_id: int, ticket_type: str, amount: float) -> dict:
     """Создание платежа в ЮKassa"""
-    try:
-        payment = Payment.create({
-            "amount": {
-                "value": str(amount),
-                "currency": "RUB"
+
+    payment_id = str(uuid.uuid4())  # Уникальный ID платежа
+    idempotence_key = str(uuid.uuid4())
+    description = f"Билет на вечеринку {ticket_type}"
+    print(1)
+    payment = Payment.create({
+        "amount": {
+            "value": str(amount),
+            "currency": "RUB"
+        },
+        "capture": True,
+        "confirmation": {
+            "type": "redirect",
+            "return_url": "https://www.example.com/return_url"
+        },
+        "description": description,
+        "metadata": {
+            "order_id": payment_id
+        },
+        "receipt": {
+            "customer": {
+                "email": "user@example.com"
             },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": "https://t.me/Stud_VPN_bot"  # URL для возврата после оплаты
-            },
-            "capture": True,
-            "description": f"Билет {ticket_type} на мероприятие {event_id}",
-            "metadata": {
-                "event_id": event_id,
-                "ticket_type": ticket_type,
-            }
-        })
-        return {
-            "payment_id": payment.id,
-            "payment_url": payment.confirmation.confirmation_url
+            "items": [
+                {
+                    "description": "Билет на вечеринку",
+                    "quantity": 1,
+                    "amount": {
+                        "value": str(amount),
+                        "currency": "RUB"
+                    },
+                    "vat_code": 1
+                }
+            ]
         }
+    }, idempotence_key)
+
+    try:
+        # Создаём платеж через API ЮKassa
+
+        # Если библиотека возвращает объект с confirmation, получаем нужные поля:
+        return payment.confirmation.confirmation_url, payment.id
+
     except Exception as e:
         print(f"Ошибка при создании платежа: {e}")
         return None
+
 
 
 @dp.callback_query(lambda c: c.data.startswith('register_'))
@@ -963,9 +986,9 @@ async def process_registration(callback_query: types.CallbackQuery):
     amount = price_map.get(ticket_type)
 
     # Создаем платеж
-    payment_data = await create_payment(event_id, ticket_type, amount)
+    payment_link,payment_id = await create_payment(event_id, ticket_type, amount)
 
-    if not payment_data:
+    if not payment_link:
         await callback_query.answer("Ошибка при создании платежа", show_alert=True)
         return
 
@@ -973,11 +996,11 @@ async def process_registration(callback_query: types.CallbackQuery):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(
             text="Оплатить",
-            url=payment_data["payment_url"]
+            url=payment_link
         )],
         [types.InlineKeyboardButton(
             text="Проверить оплату",
-            callback_data=f"check_payment_{payment_data['payment_id']}_{event_id}_{ticket_type}"
+            callback_data=f"check_payment_{payment_id}_{event_id}_{ticket_type}"
         )]
     ])
 
