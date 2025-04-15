@@ -958,7 +958,7 @@ async def create_payment(event_id: int, ticket_type: str, amount: float) -> dict
     }, idempotence_key)
 
     try:
-        # Создаём платеж через API ЮKassa
+        # Создаём платеж через API ЮKass
 
         # Если библиотека возвращает объект с confirmation, получаем нужные поля:
         return payment.confirmation.confirmation_url, payment.id

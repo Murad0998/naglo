@@ -14,7 +14,7 @@ async def create_payment(amount, description, email=None):
     payment_id = str(uuid.uuid4())  # Уникальный ID платежа
     idempotence_key = str(uuid.uuid4())  # Уникальный идемпотентный ключ
 
-    # Формируем базовую структуру платежа
+    # Формируем базовую структуру платеж
     payment = Payment.create({
         "amount": {
             "value": str(amount),
